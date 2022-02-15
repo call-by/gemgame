@@ -13,6 +13,7 @@ export type { ERC165 } from "./ERC165";
 export type { IERC165 } from "./IERC165";
 export type { ERC721Metadata } from "./ERC721Metadata";
 export type { AvaPepes } from "./AvaPepes";
+export type { GemGame } from "./GemGame";
 export type { GemGiveaway } from "./GemGiveaway";
 export type { IERC721Burnable } from "./IERC721Burnable";
 
@@ -28,5 +29,6 @@ export { ERC165__factory } from "./factories/ERC165__factory";
 export { IERC165__factory } from "./factories/IERC165__factory";
 export { ERC721Metadata__factory } from "./factories/ERC721Metadata__factory";
 export { AvaPepes__factory } from "./factories/AvaPepes__factory";
+export { GemGame__factory } from "./factories/GemGame__factory";
 export { GemGiveaway__factory } from "./factories/GemGiveaway__factory";
 export { IERC721Burnable__factory } from "./factories/IERC721Burnable__factory";
