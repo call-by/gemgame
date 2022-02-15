@@ -23,7 +23,7 @@ contract GemGame is ERC721Metadata {
   uint256 public startTime = 1645808400;
 
   // Max number of giveaways
-  uint256 public giveawayMax = 400;
+  uint256 public giveawayMax = 300;
 
   // Minters
   mapping(uint256 => address) public minters;
@@ -74,19 +74,6 @@ contract GemGame is ERC721Metadata {
     uint256 tokenId = _randomMint(to);
     _giveaways[tokenId] = to;
     _giveawayCounter.increment();
-  }
-
-  function presaleReward(
-    address to,
-    uint256 startIndex,
-    uint256 count
-  ) external onlyOwner {
-    require(to != address(0), "GemGame: zero address");
-    uint256 index = (_getRandom() % count) + startIndex;
-    uint256 tokenId = _popPendingAtIndex(index);
-    _totalSupply += 1;
-    minters[tokenId] = to;
-    _mint(to, tokenId);
   }
 
   function totalSupply() public view override returns (uint256) {
