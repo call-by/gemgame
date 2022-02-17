@@ -99,7 +99,7 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
   function ownerMint(address to) external onlyOwner {
     require(!ownerMinted, "Already minted");
     require(to != address(0), "Invalid recipient");
-    _batchMint(to, 286);
+    _batchMint(to, 300);
 
     // After mint, set diamond ids
     for (uint256 i = 0; i < 286; i++) {
@@ -111,6 +111,10 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
 
   function totalSupply() public view override returns (uint256) {
     return _totalSupply;
+  }
+
+  function getPendingIds() external view onlyOwner returns (uint256[] memory) {
+    return _pendingIds;
   }
 
   function whitelistMint(
