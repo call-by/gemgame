@@ -27,7 +27,7 @@ contract GemGiveaway is Ownable, ReentrancyGuard {
   constructor(address _collection, uint256 firstWeeklyGiveawayStart) {
     collection = IERC721Burnable(_collection);
     for (uint256 i = 0; i < 330; i++) {
-      uniqueIds[i] = i;
+      uniqueIds.push(i);
     }
     giveawayStartTimestamp = firstWeeklyGiveawayStart;
   }

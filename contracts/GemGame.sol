@@ -3,12 +3,21 @@ pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "./ERC721Metadata.sol";
 
-contract GemGame is ERC721Metadata {
+contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
   using SafeMath for uint256;
   using Counters for Counters.Counter;
+
+  bytes32 public merkleRoot = "";
+  mapping(address => uint256) public whitelistRemaining;
+  mapping(address => bool) public whitelistUsed;
+  uint256 public whitelistAllocation = 5;
+  bool public whitelistUsable = false;
 
   // Max supply of NFTs
   uint256 public constant MAX_NFT_SUPPLY = 6886;
@@ -16,44 +25,67 @@ contract GemGame is ERC721Metadata {
   // Mint price is 1.5 AVAX
   uint256 public constant MINT_PRICE = 1.5 ether;
 
-  // Pending count
-  uint256 public pendingCount = MAX_NFT_SUPPLY;
+  // Owner mint for giveaway
+  bool public ownerMinted;
 
   // Start time for main drop
   uint256 public startTime = 1645808400;
-
-  // Max number of giveaways
-  uint256 public giveawayMax = 300;
-
-  // Minters
-  mapping(uint256 => address) public minters;
 
   // Total supply of NFTs
   uint256 private _totalSupply;
 
   // Pending Ids
-  uint256[10001] private _pendingIds;
-
-  // Giveaway winners
-  mapping(uint256 => address) private _giveaways;
-  Counters.Counter private _giveawayCounter;
+  uint256[] private _pendingIds;
 
   // Admin wallets
   address private _admin;
-  address private _admin2;
 
-  modifier periodStarted() {
-    require(block.timestamp >= startTime, "GemGame: Period not started");
+  modifier mintingStarted() {
+    require(block.timestamp >= startTime, "GemGame: Mint not started");
     _;
   }
 
-  constructor(
-    string memory baseURI_,
-    address admin_,
-    address admin2_
-  ) ERC721Metadata("GemGame", "GEMGAME", baseURI_) {
+  modifier beforeMint(uint256 numberOfNfts) {
+    require(_pendingIds.length > 0, "GemGame: All minted");
+    require(numberOfNfts > 0, "GemGame: numberOfNfts cannot be 0");
+    require(numberOfNfts <= 20, "GemGame: You may not buy more than 20 NFTs at once");
+    require(totalSupply().add(numberOfNfts) <= MAX_NFT_SUPPLY, "GemGame: not enough remaining");
+    require(MINT_PRICE.mul(numberOfNfts) == msg.value, "GemGame: invalid ether value");
+
+    _;
+  }
+
+  constructor(string memory baseURI_, address admin_)
+    ERC721Metadata("GemGame", "GEMGAME", baseURI_)
+  {
     _admin = admin_;
-    _admin2 = admin2_;
+    // For owner mint, diamonds shouldn't be minted for giveaways
+    for (uint256 i = 0; i < 6600; i++) {
+      _pendingIds.push(i);
+    }
+
+    _pause();
+  }
+
+  // Ownable functions
+  function pauseMint() external onlyOwner {
+    _pause();
+  }
+
+  function unpauseMint() external onlyOwner {
+    _unpause();
+  }
+
+  function setAdmin(address admin) external onlyOwner {
+    _admin = admin;
+  }
+
+  function setWhitelistUsable(bool _whitelistUsable) external onlyOwner {
+    whitelistUsable = _whitelistUsable;
+  }
+
+  function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
+    merkleRoot = _merkleRoot;
   }
 
   function setStartTime(uint256 _startTime) external onlyOwner {
@@ -62,86 +94,98 @@ contract GemGame is ERC721Metadata {
     startTime = _startTime;
   }
 
-  function setGiveawayMax(uint256 _giveawayMax) external onlyOwner {
-    require(_giveawayMax >= 0 && _giveawayMax <= MAX_NFT_SUPPLY, "GemGame: invalid max value");
-    require(giveawayMax != _giveawayMax, "GemGame: already set");
-    giveawayMax = _giveawayMax;
-  }
+  // end of ownable functions
 
-  function randomGiveaway(address to) external onlyOwner {
-    require(to != address(0), "GemGame: zero address");
-    require(_giveawayCounter.current() < giveawayMax, "GemGame: overflow giveaways");
-    uint256 tokenId = _randomMint(to);
-    _giveaways[tokenId] = to;
-    _giveawayCounter.increment();
+  function ownerMint(address to) external onlyOwner {
+    require(!ownerMinted, "Already minted");
+    require(to != address(0), "Invalid recipient");
+    _batchMint(to, 286);
+
+    // After mint, set diamond ids
+    for (uint256 i = 0; i < 286; i++) {
+      _pendingIds.push(i + 6600);
+    }
+
+    ownerMinted = true;
   }
 
   function totalSupply() public view override returns (uint256) {
     return _totalSupply;
   }
 
-  function purchase(uint256 numberOfNfts) external payable {
-    require(pendingCount > 0, "GemGame: All minted");
-    require(numberOfNfts > 0, "GemGame: numberOfNfts cannot be 0");
-    require(numberOfNfts <= 20, "GemGame: You may not buy more than 20 NFTs at once");
-    require(totalSupply().add(numberOfNfts) <= MAX_NFT_SUPPLY, "GemGame: sale already ended");
-    require(MINT_PRICE.mul(numberOfNfts) == msg.value, "GemGame: invalid ether value");
+  function whitelistMint(
+    uint256 amount,
+    bytes32 leaf,
+    bytes32[] memory proof
+  ) external payable beforeMint(amount) whenNotPaused nonReentrant {
+    require(whitelistUsable, "Whitelist is not allowed");
 
-    for (uint256 i = 0; i < numberOfNfts; i++) {
-      _randomMint(msg.sender);
+    // Create storage element tracking user mints if this is the first mint for them
+    if (!whitelistUsed[msg.sender]) {
+      // Verify that (msg.sender, amount) correspond to Merkle leaf
+      require(keccak256(abi.encodePacked(msg.sender)) == leaf, "Sender don't match Merkle leaf");
+
+      // Verify that (leaf, proof) matches the Merkle root
+      require(verify(merkleRoot, leaf, proof), "Not a valid leaf in the Merkle tree");
+
+      whitelistUsed[msg.sender] = true;
+      whitelistRemaining[msg.sender] = whitelistAllocation;
     }
+
+    require(whitelistRemaining[msg.sender] >= amount, "Can't mint more than remaining allocation");
+
+    whitelistRemaining[msg.sender] -= amount;
+    _batchMint(msg.sender, amount);
   }
 
-  function getMintedCounts() public view returns (uint256) {
-    uint256 count = 0;
-    for (uint256 i = 1; i <= MAX_NFT_SUPPLY; i++) {
-      if (minters[i] == msg.sender) {
-        count += 1;
-      }
+  function publicMint(uint256 numberOfNfts)
+    external
+    payable
+    mintingStarted
+    beforeMint(numberOfNfts)
+    whenNotPaused
+    nonReentrant
+  {
+    _batchMint(msg.sender, numberOfNfts);
+  }
+
+  function _batchMint(address to, uint256 numberOfNfts) internal {
+    for (uint256 i = 0; i < numberOfNfts; i++) {
+      _randomMint(to);
     }
-    return count;
   }
 
   function _randomMint(address _to) internal returns (uint256) {
     require(totalSupply() < MAX_NFT_SUPPLY, "GemGame: max supply reached");
-    uint256 index = (_getRandom() % pendingCount) + 1;
-    uint256 tokenId = _popPendingAtIndex(index);
-    _totalSupply += 1;
-    minters[tokenId] = msg.sender;
+    uint256 index = _getRandom() % _pendingIds.length;
+    uint256 tokenId = _pendingIds[index];
+    _totalSupply++;
     _mint(_to, tokenId);
 
-    return tokenId;
-  }
+    _pendingIds[index] = _pendingIds[_pendingIds.length - 1];
+    _pendingIds.pop();
 
-  function getPendingIndexById(
-    uint256 tokenId,
-    uint256 startIndex,
-    uint256 totalCount
-  ) external view returns (uint256) {
-    for (uint256 i = 0; i < totalCount; i++) {
-      uint256 pendingTokenId = _getPendingAtIndex(i + startIndex);
-      if (pendingTokenId == tokenId) {
-        return i + startIndex;
-      }
-    }
-    revert("NFTInitialSeller: invalid token id(pending index)");
-  }
-
-  function _getPendingAtIndex(uint256 _index) internal view returns (uint256) {
-    return _pendingIds[_index] + _index;
-  }
-
-  function _popPendingAtIndex(uint256 _index) internal returns (uint256) {
-    uint256 tokenId = _getPendingAtIndex(_index);
-    if (_index != pendingCount) {
-      uint256 lastPendingId = _getPendingAtIndex(pendingCount);
-      _pendingIds[_index] = lastPendingId - _index;
-    }
-    pendingCount--;
     return tokenId;
   }
 
   function _getRandom() internal view returns (uint256) {
-    return uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp, pendingCount)));
+    return uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp, _pendingIds)));
+  }
+
+  function verify(
+    bytes32 root,
+    bytes32 leaf,
+    bytes32[] memory proof
+  ) public pure returns (bool) {
+    return MerkleProof.verify(proof, root, leaf);
+  }
+
+  /**
+   * @dev Withdraw the contract balance to the administrator address
+   */
+  function withdraw() external {
+    uint256 amount = address(this).balance;
+    (bool success, ) = _admin.call{value: amount}("");
+    require(success, "Failed to send ether");
   }
 }

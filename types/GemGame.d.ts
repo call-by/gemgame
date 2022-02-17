@@ -28,24 +28,24 @@ interface GemGameInterface extends ethers.utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "burn(uint256)": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
-    "getMintedCounts()": FunctionFragment;
-    "getPendingIndexById(uint256,uint256,uint256)": FunctionFragment;
-    "giveawayMax()": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
-    "minters(uint256)": FunctionFragment;
+    "merkleRoot()": FunctionFragment;
     "name()": FunctionFragment;
     "owner()": FunctionFragment;
+    "ownerMint(uint256)": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
+    "pauseMint()": FunctionFragment;
+    "paused()": FunctionFragment;
     "pendingCount()": FunctionFragment;
-    "presaleReward(address,uint256,uint256)": FunctionFragment;
-    "purchase(uint256)": FunctionFragment;
-    "randomGiveaway(address)": FunctionFragment;
+    "publicMint(uint256)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
+    "setAdmin(address)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
     "setBaseURI(string)": FunctionFragment;
-    "setGiveawayMax(uint256)": FunctionFragment;
+    "setMerkleRoot(bytes32)": FunctionFragment;
     "setStartTime(uint256)": FunctionFragment;
+    "setWhitelistUsable(bool)": FunctionFragment;
     "startTime()": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
@@ -55,6 +55,14 @@ interface GemGameInterface extends ethers.utils.Interface {
     "totalSupply()": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
+    "unpauseMint()": FunctionFragment;
+    "verify(bytes32,bytes32,bytes32[])": FunctionFragment;
+    "whitelistAllocation()": FunctionFragment;
+    "whitelistMint(uint256,bytes32,bytes32[])": FunctionFragment;
+    "whitelistRemaining(address)": FunctionFragment;
+    "whitelistUsable()": FunctionFragment;
+    "whitelistUsed(address)": FunctionFragment;
+    "withdraw()": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -76,46 +84,32 @@ interface GemGameInterface extends ethers.utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "getMintedCounts",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getPendingIndexById",
-    values: [BigNumberish, BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "giveawayMax",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "isApprovedForAll",
     values: [string, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "minters",
-    values: [BigNumberish]
+    functionFragment: "merkleRoot",
+    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "ownerMint",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "ownerOf",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "pauseMint", values?: undefined): string;
+  encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "pendingCount",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "presaleReward",
-    values: [string, BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "purchase",
+    functionFragment: "publicMint",
     values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "randomGiveaway",
-    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -125,18 +119,23 @@ interface GemGameInterface extends ethers.utils.Interface {
     functionFragment: "safeTransferFrom",
     values: [string, string, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "setAdmin", values: [string]): string;
   encodeFunctionData(
     functionFragment: "setApprovalForAll",
     values: [string, boolean]
   ): string;
   encodeFunctionData(functionFragment: "setBaseURI", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "setGiveawayMax",
-    values: [BigNumberish]
+    functionFragment: "setMerkleRoot",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setStartTime",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setWhitelistUsable",
+    values: [boolean]
   ): string;
   encodeFunctionData(functionFragment: "startTime", values?: undefined): string;
   encodeFunctionData(
@@ -168,6 +167,35 @@ interface GemGameInterface extends ethers.utils.Interface {
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
+  encodeFunctionData(
+    functionFragment: "unpauseMint",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "verify",
+    values: [BytesLike, BytesLike, BytesLike[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "whitelistAllocation",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "whitelistMint",
+    values: [BigNumberish, BytesLike, BytesLike[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "whitelistRemaining",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "whitelistUsable",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "whitelistUsed",
+    values: [string]
+  ): string;
+  encodeFunctionData(functionFragment: "withdraw", values?: undefined): string;
 
   decodeFunctionResult(
     functionFragment: "MAX_NFT_SUPPLY",
@@ -182,38 +210,21 @@ interface GemGameInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getMintedCounts",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getPendingIndexById",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "giveawayMax",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "isApprovedForAll",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "minters", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "merkleRoot", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "ownerMint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "pauseMint", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "pendingCount",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "presaleReward",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "purchase", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "randomGiveaway",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "publicMint", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
@@ -222,17 +233,22 @@ interface GemGameInterface extends ethers.utils.Interface {
     functionFragment: "safeTransferFrom",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "setAdmin", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setApprovalForAll",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setBaseURI", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "setGiveawayMax",
+    functionFragment: "setMerkleRoot",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "setStartTime",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setWhitelistUsable",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "startTime", data: BytesLike): Result;
@@ -262,18 +278,48 @@ interface GemGameInterface extends ethers.utils.Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "unpauseMint",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "verify", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "whitelistAllocation",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "whitelistMint",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "whitelistRemaining",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "whitelistUsable",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "whitelistUsed",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
     "ApprovalForAll(address,address,bool)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
+    "Paused(address)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
+    "Unpaused(address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
 }
 
 export class GemGame extends BaseContract {
@@ -342,51 +388,39 @@ export class GemGame extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    getMintedCounts(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    getPendingIndexById(
-      tokenId: BigNumberish,
-      startIndex: BigNumberish,
-      totalCount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    giveawayMax(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     isApprovedForAll(
       owner: string,
       operator: string,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    minters(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
+    merkleRoot(overrides?: CallOverrides): Promise<[string]>;
 
     name(overrides?: CallOverrides): Promise<[string]>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
+
+    ownerMint(
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    pauseMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    paused(overrides?: CallOverrides): Promise<[boolean]>;
+
     pendingCount(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    presaleReward(
-      to: string,
-      startIndex: BigNumberish,
-      count: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    purchase(
+    publicMint(
       numberOfNfts: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    randomGiveaway(
-      to: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     renounceOwnership(
@@ -408,6 +442,11 @@ export class GemGame extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setAdmin(
+      admin: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setApprovalForAll(
       operator: string,
       approved: boolean,
@@ -419,13 +458,18 @@ export class GemGame extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setGiveawayMax(
-      _giveawayMax: BigNumberish,
+    setMerkleRoot(
+      _merkleRoot: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     setStartTime(
       _startTime: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setWhitelistUsable(
+      _whitelistUsable: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -467,6 +511,39 @@ export class GemGame extends BaseContract {
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    unpauseMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    verify(
+      root: BytesLike,
+      leaf: BytesLike,
+      proof: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    whitelistAllocation(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    whitelistMint(
+      amount: BigNumberish,
+      leaf: BytesLike,
+      proof: BytesLike[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    whitelistRemaining(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    whitelistUsable(overrides?: CallOverrides): Promise<[boolean]>;
+
+    whitelistUsed(arg0: string, overrides?: CallOverrides): Promise<[boolean]>;
+
+    withdraw(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   MAX_NFT_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
@@ -491,48 +568,36 @@ export class GemGame extends BaseContract {
     overrides?: CallOverrides
   ): Promise<string>;
 
-  getMintedCounts(overrides?: CallOverrides): Promise<BigNumber>;
-
-  getPendingIndexById(
-    tokenId: BigNumberish,
-    startIndex: BigNumberish,
-    totalCount: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  giveawayMax(overrides?: CallOverrides): Promise<BigNumber>;
-
   isApprovedForAll(
     owner: string,
     operator: string,
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  minters(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
+  merkleRoot(overrides?: CallOverrides): Promise<string>;
 
   name(overrides?: CallOverrides): Promise<string>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
+  ownerMint(
+    amount: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+  pauseMint(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  paused(overrides?: CallOverrides): Promise<boolean>;
 
   pendingCount(overrides?: CallOverrides): Promise<BigNumber>;
 
-  presaleReward(
-    to: string,
-    startIndex: BigNumberish,
-    count: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  purchase(
+  publicMint(
     numberOfNfts: BigNumberish,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  randomGiveaway(
-    to: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   renounceOwnership(
@@ -554,6 +619,11 @@ export class GemGame extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setAdmin(
+    admin: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setApprovalForAll(
     operator: string,
     approved: boolean,
@@ -565,13 +635,18 @@ export class GemGame extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setGiveawayMax(
-    _giveawayMax: BigNumberish,
+  setMerkleRoot(
+    _merkleRoot: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   setStartTime(
     _startTime: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setWhitelistUsable(
+    _whitelistUsable: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -611,6 +686,39 @@ export class GemGame extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  unpauseMint(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  verify(
+    root: BytesLike,
+    leaf: BytesLike,
+    proof: BytesLike[],
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  whitelistAllocation(overrides?: CallOverrides): Promise<BigNumber>;
+
+  whitelistMint(
+    amount: BigNumberish,
+    leaf: BytesLike,
+    proof: BytesLike[],
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  whitelistRemaining(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  whitelistUsable(overrides?: CallOverrides): Promise<boolean>;
+
+  whitelistUsed(arg0: string, overrides?: CallOverrides): Promise<boolean>;
+
+  withdraw(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     MAX_NFT_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -631,46 +739,32 @@ export class GemGame extends BaseContract {
       overrides?: CallOverrides
     ): Promise<string>;
 
-    getMintedCounts(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getPendingIndexById(
-      tokenId: BigNumberish,
-      startIndex: BigNumberish,
-      totalCount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    giveawayMax(overrides?: CallOverrides): Promise<BigNumber>;
-
     isApprovedForAll(
       owner: string,
       operator: string,
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    minters(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
+    merkleRoot(overrides?: CallOverrides): Promise<string>;
 
     name(overrides?: CallOverrides): Promise<string>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
+    ownerMint(amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
+
     ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+    pauseMint(overrides?: CallOverrides): Promise<void>;
+
+    paused(overrides?: CallOverrides): Promise<boolean>;
 
     pendingCount(overrides?: CallOverrides): Promise<BigNumber>;
 
-    presaleReward(
-      to: string,
-      startIndex: BigNumberish,
-      count: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    purchase(
+    publicMint(
       numberOfNfts: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    randomGiveaway(to: string, overrides?: CallOverrides): Promise<void>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
@@ -689,6 +783,8 @@ export class GemGame extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setAdmin(admin: string, overrides?: CallOverrides): Promise<void>;
+
     setApprovalForAll(
       operator: string,
       approved: boolean,
@@ -697,13 +793,18 @@ export class GemGame extends BaseContract {
 
     setBaseURI(baseURI_: string, overrides?: CallOverrides): Promise<void>;
 
-    setGiveawayMax(
-      _giveawayMax: BigNumberish,
+    setMerkleRoot(
+      _merkleRoot: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
     setStartTime(
       _startTime: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setWhitelistUsable(
+      _whitelistUsable: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -742,6 +843,35 @@ export class GemGame extends BaseContract {
       newOwner: string,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    unpauseMint(overrides?: CallOverrides): Promise<void>;
+
+    verify(
+      root: BytesLike,
+      leaf: BytesLike,
+      proof: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    whitelistAllocation(overrides?: CallOverrides): Promise<BigNumber>;
+
+    whitelistMint(
+      amount: BigNumberish,
+      leaf: BytesLike,
+      proof: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    whitelistRemaining(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    whitelistUsable(overrides?: CallOverrides): Promise<boolean>;
+
+    whitelistUsed(arg0: string, overrides?: CallOverrides): Promise<boolean>;
+
+    withdraw(overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {
@@ -771,6 +901,8 @@ export class GemGame extends BaseContract {
       { previousOwner: string; newOwner: string }
     >;
 
+    Paused(account?: null): TypedEventFilter<[string], { account: string }>;
+
     Transfer(
       from?: string | null,
       to?: string | null,
@@ -779,6 +911,8 @@ export class GemGame extends BaseContract {
       [string, string, BigNumber],
       { from: string; to: string; tokenId: BigNumber }
     >;
+
+    Unpaused(account?: null): TypedEventFilter<[string], { account: string }>;
   };
 
   estimateGas: {
@@ -804,51 +938,39 @@ export class GemGame extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getMintedCounts(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getPendingIndexById(
-      tokenId: BigNumberish,
-      startIndex: BigNumberish,
-      totalCount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    giveawayMax(overrides?: CallOverrides): Promise<BigNumber>;
-
     isApprovedForAll(
       owner: string,
       operator: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    minters(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+    merkleRoot(overrides?: CallOverrides): Promise<BigNumber>;
 
     name(overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
+
+    ownerMint(
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    pauseMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    paused(overrides?: CallOverrides): Promise<BigNumber>;
+
     pendingCount(overrides?: CallOverrides): Promise<BigNumber>;
 
-    presaleReward(
-      to: string,
-      startIndex: BigNumberish,
-      count: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    purchase(
+    publicMint(
       numberOfNfts: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    randomGiveaway(
-      to: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     renounceOwnership(
@@ -870,6 +992,11 @@ export class GemGame extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setAdmin(
+      admin: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setApprovalForAll(
       operator: string,
       approved: boolean,
@@ -881,13 +1008,18 @@ export class GemGame extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setGiveawayMax(
-      _giveawayMax: BigNumberish,
+    setMerkleRoot(
+      _merkleRoot: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     setStartTime(
       _startTime: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setWhitelistUsable(
+      _whitelistUsable: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -929,6 +1061,39 @@ export class GemGame extends BaseContract {
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    unpauseMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    verify(
+      root: BytesLike,
+      leaf: BytesLike,
+      proof: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    whitelistAllocation(overrides?: CallOverrides): Promise<BigNumber>;
+
+    whitelistMint(
+      amount: BigNumberish,
+      leaf: BytesLike,
+      proof: BytesLike[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    whitelistRemaining(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    whitelistUsable(overrides?: CallOverrides): Promise<BigNumber>;
+
+    whitelistUsed(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    withdraw(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -957,54 +1122,39 @@ export class GemGame extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getMintedCounts(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    getPendingIndexById(
-      tokenId: BigNumberish,
-      startIndex: BigNumberish,
-      totalCount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    giveawayMax(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     isApprovedForAll(
       owner: string,
       operator: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    minters(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    merkleRoot(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    ownerMint(
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    pauseMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     pendingCount(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    presaleReward(
-      to: string,
-      startIndex: BigNumberish,
-      count: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    purchase(
+    publicMint(
       numberOfNfts: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    randomGiveaway(
-      to: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     renounceOwnership(
@@ -1026,6 +1176,11 @@ export class GemGame extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    setAdmin(
+      admin: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     setApprovalForAll(
       operator: string,
       approved: boolean,
@@ -1037,13 +1192,18 @@ export class GemGame extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setGiveawayMax(
-      _giveawayMax: BigNumberish,
+    setMerkleRoot(
+      _merkleRoot: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     setStartTime(
       _startTime: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setWhitelistUsable(
+      _whitelistUsable: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1083,6 +1243,44 @@ export class GemGame extends BaseContract {
 
     transferOwnership(
       newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    unpauseMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    verify(
+      root: BytesLike,
+      leaf: BytesLike,
+      proof: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    whitelistAllocation(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    whitelistMint(
+      amount: BigNumberish,
+      leaf: BytesLike,
+      proof: BytesLike[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    whitelistRemaining(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    whitelistUsable(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    whitelistUsed(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
