@@ -4,7 +4,6 @@
 export type { Ownable } from "./Ownable";
 export type { Pausable } from "./Pausable";
 export type { ERC721 } from "./ERC721";
-export type { ERC721Burnable } from "./ERC721Burnable";
 export type { ERC721Enumerable } from "./ERC721Enumerable";
 export type { IERC721Enumerable } from "./IERC721Enumerable";
 export type { IERC721Metadata } from "./IERC721Metadata";
@@ -20,7 +19,6 @@ export type { IERC721Burnable } from "./IERC721Burnable";
 export { Ownable__factory } from "./factories/Ownable__factory";
 export { Pausable__factory } from "./factories/Pausable__factory";
 export { ERC721__factory } from "./factories/ERC721__factory";
-export { ERC721Burnable__factory } from "./factories/ERC721Burnable__factory";
 export { ERC721Enumerable__factory } from "./factories/ERC721Enumerable__factory";
 export { IERC721Enumerable__factory } from "./factories/IERC721Enumerable__factory";
 export { IERC721Metadata__factory } from "./factories/IERC721Metadata__factory";

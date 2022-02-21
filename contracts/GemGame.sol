@@ -23,7 +23,7 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
   uint256 public constant MAX_NFT_SUPPLY = 6886;
 
   // Mint price is 1.5 AVAX
-  uint256 public constant MINT_PRICE = 1.5 ether;
+  uint256 public mintPrice = 1.5 ether;
 
   // Owner mint for giveaway
   bool public ownerMinted;
@@ -31,39 +31,41 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
   // Start time for main drop
   uint256 public startTime = 1645808400;
 
+  // Pending count for
+  uint256 public pendingCount;
+
   // Total supply of NFTs
   uint256 private _totalSupply;
 
   // Pending Ids
-  uint256[] private _pendingIds;
+  uint256[6600] private _pendingIds;
+  uint256[] private mintedIds;
 
   // Admin wallets
-  address private _admin;
+  address public admin;
 
   modifier mintingStarted() {
+    require(startTime != 0, "Start time not set");
     require(block.timestamp >= startTime, "GemGame: Mint not started");
     _;
   }
 
   modifier beforeMint(uint256 numberOfNfts) {
-    require(_pendingIds.length > 0, "GemGame: All minted");
+    require(ownerMinted, "Owner mint not done");
+    require(pendingCount > 0, "GemGame: All minted");
     require(numberOfNfts > 0, "GemGame: numberOfNfts cannot be 0");
     require(numberOfNfts <= 20, "GemGame: You may not buy more than 20 NFTs at once");
     require(totalSupply().add(numberOfNfts) <= MAX_NFT_SUPPLY, "GemGame: not enough remaining");
-    require(MINT_PRICE.mul(numberOfNfts) == msg.value, "GemGame: invalid ether value");
+    require(mintPrice.mul(numberOfNfts) == msg.value, "GemGame: invalid ether value");
 
     _;
   }
 
-  constructor(string memory baseURI_, address admin_)
+  constructor(string memory baseURI_, address _admin)
     ERC721Metadata("GemGame", "GEMGAME", baseURI_)
   {
-    _admin = admin_;
-    // For owner mint, diamonds shouldn't be minted for giveaways
-    for (uint256 i = 0; i < 6600; i++) {
-      _pendingIds.push(i);
-    }
-
+    admin = _admin;
+    pendingCount = 6600; // Without diamonds for giveaway ownerMint
     _pause();
   }
 
@@ -76,12 +78,17 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
     _unpause();
   }
 
-  function setAdmin(address admin) external onlyOwner {
-    _admin = admin;
+  function setAdmin(address _admin) external onlyOwner {
+    admin = _admin;
   }
 
   function setWhitelistUsable(bool _whitelistUsable) external onlyOwner {
     whitelistUsable = _whitelistUsable;
+  }
+
+  function setMintPrice(uint256 _mintPrice) external onlyOwner {
+    require(_mintPrice > 0, "Price can't be zero");
+    mintPrice = _mintPrice;
   }
 
   function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
@@ -89,32 +96,38 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
   }
 
   function setStartTime(uint256 _startTime) external onlyOwner {
-    require(_startTime > 0, "GemGame: invalid _startTime");
-    require(_startTime > block.timestamp, "GemGame: old start time");
     startTime = _startTime;
   }
-
-  // end of ownable functions
 
   function ownerMint(address to) external onlyOwner {
     require(!ownerMinted, "Already minted");
     require(to != address(0), "Invalid recipient");
-    _batchMint(to, 300);
+    _batchMint(to, 20);
+  }
 
+  function addDiamonds() external onlyOwner {
+    require(pendingCount == 6300, "300 should be minted for giveaway");
     // After mint, set diamond ids
     for (uint256 i = 0; i < 286; i++) {
-      _pendingIds.push(i + 6600);
+      _pendingIds[6300 + i] = 6601 + i;
     }
 
+    pendingCount += 286;
     ownerMinted = true;
   }
 
-  function totalSupply() public view override returns (uint256) {
-    return _totalSupply;
+  function getPendingIds() external view onlyOwner returns (uint256[6600] memory) {
+    return _pendingIds;
   }
 
-  function getPendingIds() external view onlyOwner returns (uint256[] memory) {
-    return _pendingIds;
+  function getMintedIds() external view onlyOwner returns (uint256[] memory) {
+    return mintedIds;
+  }
+
+  // end of ownable functions
+
+  function totalSupply() public view override returns (uint256) {
+    return _totalSupply;
   }
 
   function whitelistMint(
@@ -161,19 +174,24 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
 
   function _randomMint(address _to) internal returns (uint256) {
     require(totalSupply() < MAX_NFT_SUPPLY, "GemGame: max supply reached");
-    uint256 index = _getRandom() % _pendingIds.length;
-    uint256 tokenId = _pendingIds[index];
+    uint256 index = _getRandom() % pendingCount;
+    uint256 tokenId = _getTokenIdByIndex(index);
+    _mint(_to, tokenId - 1); // actual tokenId should start from 0
+    mintedIds.push(tokenId - 1);
+
+    _pendingIds[index] = _getTokenIdByIndex(pendingCount - 1);
+    pendingCount--;
     _totalSupply++;
-    _mint(_to, tokenId);
 
-    _pendingIds[index] = _pendingIds[_pendingIds.length - 1];
-    _pendingIds.pop();
+    return tokenId - 1;
+  }
 
-    return tokenId;
+  function _getTokenIdByIndex(uint256 index) internal view returns (uint256) {
+    return _pendingIds[index] == 0 ? index + 1 : _pendingIds[index];
   }
 
   function _getRandom() internal view returns (uint256) {
-    return uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp, _pendingIds)));
+    return uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp, pendingCount)));
   }
 
   function verify(
@@ -187,9 +205,9 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
   /**
    * @dev Withdraw the contract balance to the administrator address
    */
-  function withdraw() external {
+  function withdraw() external onlyOwner {
     uint256 amount = address(this).balance;
-    (bool success, ) = _admin.call{value: amount}("");
+    (bool success, ) = admin.call{value: amount}("");
     require(success, "Failed to send ether");
   }
 }
