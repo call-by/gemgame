@@ -51,6 +51,7 @@ interface GemGameInterface extends ethers.utils.Interface {
     "setMerkleRoot(bytes32)": FunctionFragment;
     "setMintPrice(uint256)": FunctionFragment;
     "setStartTime(uint256)": FunctionFragment;
+    "setWhitelistAllocation(uint256)": FunctionFragment;
     "setWhitelistUsable(bool)": FunctionFragment;
     "startTime()": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
@@ -152,6 +153,10 @@ interface GemGameInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setStartTime",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setWhitelistAllocation",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -287,6 +292,10 @@ interface GemGameInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setStartTime",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setWhitelistAllocation",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -7134,6 +7143,11 @@ export class GemGame extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setWhitelistAllocation(
+      _whitelistAllocation: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setWhitelistUsable(
       _whitelistUsable: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -13933,6 +13947,11 @@ export class GemGame extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setWhitelistAllocation(
+    _whitelistAllocation: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setWhitelistUsable(
     _whitelistUsable: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -20711,6 +20730,11 @@ export class GemGame extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setWhitelistAllocation(
+      _whitelistAllocation: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setWhitelistUsable(
       _whitelistUsable: boolean,
       overrides?: CallOverrides
@@ -20943,6 +20967,11 @@ export class GemGame extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setWhitelistAllocation(
+      _whitelistAllocation: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setWhitelistUsable(
       _whitelistUsable: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -21141,6 +21170,11 @@ export class GemGame extends BaseContract {
 
     setStartTime(
       _startTime: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setWhitelistAllocation(
+      _whitelistAllocation: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

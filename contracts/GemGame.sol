@@ -16,7 +16,7 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
   bytes32 public merkleRoot = "";
   mapping(address => uint256) public whitelistRemaining;
   mapping(address => bool) public whitelistUsed;
-  uint256 public whitelistAllocation = 5;
+  uint256 public whitelistAllocation = 10;
   bool public whitelistUsable = false;
 
   // Max supply of NFTs
@@ -84,6 +84,10 @@ contract GemGame is ERC721Metadata, ReentrancyGuard, Pausable {
 
   function setWhitelistUsable(bool _whitelistUsable) external onlyOwner {
     whitelistUsable = _whitelistUsable;
+  }
+
+  function setWhitelistAllocation(uint256 _whitelistAllocation) external onlyOwner {
+    whitelistAllocation = _whitelistAllocation;
   }
 
   function setMintPrice(uint256 _mintPrice) external onlyOwner {
