@@ -13,7 +13,7 @@ async function main() {
 
   const gemGame: GemGame = await ethers.getContractAt(
     "GemGame",
-    "0x9e8217DEDe230Ff3845C3E54Ca1Ff6e3233956bA"
+    "0x5f53fFa49dB87dfe432048D92Abf850B4960eeFB"
   );
 
   // Verification
@@ -26,13 +26,15 @@ async function main() {
   //   console.log(e);
   // }
 
-  for (let i = 0; i < 3; i++) {
-    console.log("Mint started: ", i);
-    const tx = await gemGame.ownerMint("0x6D4f8DFF04ba62BC76281c5fA320B9793EA5b973", {
-      gasLimit: 5e6,
-    });
-    await tx.wait();
-  }
+  const tx = await gemGame.addDiamonds({ gasLimit: 7e6 });
+  await tx.wait();
+  // for (let i = 0; i < 15; i++) {
+  //   console.log("Mint started: ", i);
+  //   const tx = await gemGame.ownerMint("0x6D4f8DFF04ba62BC76281c5fA320B9793EA5b973", {
+  //     gasLimit: 5e6,
+  //   });
+  //   await tx.wait();
+  // }
 }
 
 // We recommend this pattern to be able to use async/await everywhere
